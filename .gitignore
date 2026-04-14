@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.env
+
+# Model files (bisa besar)
+*.pkl
+*.joblib
+models/*.pkl
+
+# Data (sensitif)
+data/raw/*.csv
+data/processed/*.csv
+*.csv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

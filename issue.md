@@ -1,3 +1,8 @@
+---
+title: "ML Simple Trainer - Implementation Issues"
+description: "Daftar issues untuk implementasi ML pipeline"
+---
+
 # Project Issues
 
 ## Issue 1: Inisialisasi Struktur Proyek & Dependencies

@@ -16,7 +16,7 @@ class TestIssue1(unittest.TestCase):
         """Test requirements.txt ada dan berisi library yang benar"""
         self.assertTrue(os.path.exists('requirements.txt'))
         
-        with open('requirements.txt', 'r') as f:
+        with open('requirements.txt', 'r', encoding='utf-8') as f:
             content = f.read()
         
         required_packages = ['pandas', 'scikit-learn', 'joblib', 'pyyaml']
@@ -42,6 +42,23 @@ class TestIssue1(unittest.TestCase):
         self.assertEqual(config['test_size'], 0.2)
         self.assertEqual(config['random_state'], 42)
         self.assertIn(config['model_type'], ['random_forest', 'logistic_regression'])
+    
+    def test_config_values_are_valid(self):
+        """Test nilai config dalam range yang valid"""
+        with open('config.yaml', 'r') as f:
+            config = yaml.safe_load(f)
+        
+        # Validasi test_size antara 0 dan 1
+        self.assertGreaterEqual(config['test_size'], 0)
+        self.assertLessEqual(config['test_size'], 1)
+        
+        # Validasi random_state harus integer positif
+        self.assertIsInstance(config['random_state'], int)
+        self.assertGreaterEqual(config['random_state'], 0)
+        
+        # Validasi model_type (case insensitive)
+        allowed_models = ['random_forest', 'logistic_regression']
+        self.assertIn(config['model_type'].lower(), allowed_models)
 
 if __name__ == '__main__':
     unittest.main()
