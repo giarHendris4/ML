@@ -14,8 +14,11 @@ models/*.pkl
 
 # Data (sensitif)
 data/raw/*.csv
+!data/raw/sample_*.csv
+!data/raw/new_data.csv
 data/processed/*.csv
 *.csv
+!*.sample.csv
 
 # IDE
 .vscode/
