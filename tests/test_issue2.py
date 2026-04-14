@@ -20,23 +20,23 @@ class TestDataLoader(unittest.TestCase):
             'target': [10.5, 15.2, 20.1, 25.8, 30.5, 35.2, 40.1, 45.8, 50.5, 55.2]
         })
         
-        # Buat file temporary
-        self.classification_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
-        self.classification_data.to_csv(self.classification_file.name, index=False)
-        self.classification_file.close()
+        # Buat temporary directory
+        self.temp_dir = tempfile.TemporaryDirectory()
         
-        self.regression_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
-        self.regression_data.to_csv(self.regression_file.name, index=False)
-        self.regression_file.close()
+        # Buat file CSV dalam temporary directory
+        self.classification_file_path = os.path.join(self.temp_dir.name, 'classification.csv')
+        self.classification_data.to_csv(self.classification_file_path, index=False)
+        
+        self.regression_file_path = os.path.join(self.temp_dir.name, 'regression.csv')
+        self.regression_data.to_csv(self.regression_file_path, index=False)
     
     def tearDown(self):
-        """Hapus file temporary"""
-        os.unlink(self.classification_file.name)
-        os.unlink(self.regression_file.name)
+        """Hapus temporary directory"""
+        self.temp_dir.cleanup()
     
     def test_load_and_split_classification(self):
         """Test loading classification data"""
-        result = DataLoader.load_and_split(self.classification_file.name)
+        result = DataLoader.load_and_split(self.classification_file_path)
         
         X_train, X_test, y_train, y_test, problem_type = result
         
@@ -50,11 +50,11 @@ class TestDataLoader(unittest.TestCase):
         # Cek stratify: proporsi label harus mirip
         train_ratio = y_train.mean()
         test_ratio = y_test.mean()
-        self.assertAlmostEqual(train_ratio, test_ratio, delta=0.3)
+        self.assertAlmostEqual(train_ratio, test_ratio, delta=0.2)
     
     def test_load_and_split_regression(self):
         """Test loading regression data"""
-        result = DataLoader.load_and_split(self.regression_file.name)
+        result = DataLoader.load_and_split(self.regression_file_path)
         
         X_train, X_test, y_train, y_test, problem_type = result
         
@@ -86,17 +86,38 @@ class TestDataLoader(unittest.TestCase):
     def test_target_column_not_found_raises_error(self):
         """Test bahwa target column yang tidak ditemukan memicu error"""
         with self.assertRaises(ValueError) as context:
-            DataLoader.load_and_split(self.classification_file.name, target_column='tidak_ada')
+            DataLoader.load_and_split(self.classification_file_path, target_column='tidak_ada')
         
         self.assertIn("tidak ditemukan", str(context.exception))
     
     def test_auto_detect_target_column(self):
         """Test bahwa target column otomatis menggunakan kolom terakhir"""
-        result = DataLoader.load_and_split(self.classification_file.name, target_column=None)
+        result = DataLoader.load_and_split(self.classification_file_path, target_column=None)
         X_train, X_test, y_train, y_test, problem_type = result
         
         # Kolom terakhir adalah 'label', seharusnya jadi target
         self.assertEqual(problem_type, 'classification')
+
+    def test_empty_file_path_raises_error(self):
+        """Test bahwa file path kosong memicu error"""
+        with self.assertRaises(ValueError) as context:
+            DataLoader.load_and_split("")
+        
+        self.assertIn("file_path", str(context.exception).lower())
+    
+    def test_none_file_path_raises_error(self):
+        """Test bahwa file path None memicu error"""
+        with self.assertRaises(ValueError) as context:
+            DataLoader.load_and_split(None)
+        
+        self.assertIn("file_path", str(context.exception).lower())
+    
+    def test_file_not_found_raises_error(self):
+        """Test bahwa file tidak ditemukan memicu error"""
+        with self.assertRaises(ValueError) as context:
+            DataLoader.load_and_split("file_yang_tidak_ada.csv")
+        
+        self.assertIn("tidak ditemukan", str(context.exception))
 
 if __name__ == '__main__':
     unittest.main()

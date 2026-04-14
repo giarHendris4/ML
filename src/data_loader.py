@@ -1,5 +1,5 @@
 import pandas as pd
-import numpy as np
+import os
 from sklearn.model_selection import train_test_split
 
 class DataLoader:
@@ -14,6 +14,12 @@ class DataLoader:
         Raises:
             ValueError: Jika data mengandung missing value atau target column tidak ditemukan
         """
+        if not file_path or not isinstance(file_path, str):
+            raise ValueError(f"file_path harus berupa string yang valid, received: {file_path}")
+        
+        if not os.path.exists(file_path):
+            raise ValueError(f"File tidak ditemukan: {file_path}")
+        
         df = pd.read_csv(file_path)
         
         # Validasi: cek missing value
@@ -29,11 +35,17 @@ class DataLoader:
         X = df.drop(columns=[target_column])
         y = df[target_column]
         
-        # Deteksi problem type
-        if y.dtype == 'object' or len(y.unique()) < 10:
+        # Deteksi problem type yang lebih akurat
+        if y.dtype == 'object':
             problem_type = 'classification'
+        elif y.dtype in ['int64', 'float64']:
+            unique_ratio = len(y.unique()) / len(y)
+            if unique_ratio < 0.05 or len(y.unique()) < 10:
+                problem_type = 'classification'
+            else:
+                problem_type = 'regression'
         else:
-            problem_type = 'regression'
+            problem_type = 'classification'
         
         # Split data
         stratify_param = y if problem_type == 'classification' else None
