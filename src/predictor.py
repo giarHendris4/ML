@@ -1,5 +1,6 @@
 import joblib
 import pandas as pd
+import os
 
 class Predictor:
     @staticmethod
@@ -28,8 +29,14 @@ class Predictor:
             Numpy array of predictions
             
         Raises:
-            ValueError: If data contains missing values
+            ValueError: If data contains missing values or file not found
         """
+        if not new_data_path or not isinstance(new_data_path, str):
+            raise ValueError(f"new_data_path harus berupa string yang valid, received: {new_data_path}")
+        
+        if not os.path.exists(new_data_path):
+            raise ValueError(f"File tidak ditemukan: {new_data_path}")
+        
         df = pd.read_csv(new_data_path)
         
         # Validasi missing value

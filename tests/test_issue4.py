@@ -135,16 +135,36 @@ class TestPredictor(unittest.TestCase):
         self.assertIn("missing value", str(context.exception).lower())
     
     def test_predict_with_nonexistent_file_raises_error(self):
-        """Test that nonexistent file raises FileNotFoundError"""
+        """Test that nonexistent file raises error"""
         model = Predictor.load_model(self.class_model_path)
         
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(ValueError) as context:
             Predictor.predict(model, "file_yang_tidak_ada.csv")
+        
+        self.assertIn("tidak ditemukan", str(context.exception).lower())
     
     def test_load_model_nonexistent_path_raises_error(self):
         """Test that loading nonexistent model raises FileNotFoundError"""
         with self.assertRaises(FileNotFoundError):
             Predictor.load_model("model_yang_tidak_ada.pkl")
+    
+    def test_predict_with_empty_path_raises_error(self):
+        """Test that empty file path raises error"""
+        model = Predictor.load_model(self.class_model_path)
+        
+        with self.assertRaises(ValueError) as context:
+            Predictor.predict(model, "")
+        
+        self.assertIn("new_data_path", str(context.exception).lower())
+    
+    def test_predict_with_none_path_raises_error(self):
+        """Test that None file path raises error"""
+        model = Predictor.load_model(self.class_model_path)
+        
+        with self.assertRaises(ValueError) as context:
+            Predictor.predict(model, None)
+        
+        self.assertIn("new_data_path", str(context.exception).lower())
 
 if __name__ == '__main__':
     unittest.main()
