@@ -1,0 +1,4 @@
+target_column: null
+test_size: 0.2
+random_state: 42
+model_type: "random_forest"
