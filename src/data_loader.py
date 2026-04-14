@@ -40,7 +40,7 @@ class DataLoader:
             problem_type = 'classification'
         elif y.dtype in ['int64', 'float64']:
             unique_ratio = len(y.unique()) / len(y)
-            if unique_ratio < 0.05 or len(y.unique()) < 10:
+            if unique_ratio < 0.05 or len(y.unique()) <= 10:
                 problem_type = 'classification'
             else:
                 problem_type = 'regression'

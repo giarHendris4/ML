@@ -15,9 +15,9 @@ class TestDataLoader(unittest.TestCase):
         })
         
         self.regression_data = pd.DataFrame({
-            'feature1': [1.2, 2.3, 3.4, 4.5, 5.6, 6.7, 7.8, 8.9, 9.0, 10.1],
-            'feature2': [3.4, 4.5, 5.6, 6.7, 7.8, 8.9, 9.0, 10.1, 11.2, 12.3],
-            'target': [10.5, 15.2, 20.1, 25.8, 30.5, 35.2, 40.1, 45.8, 50.5, 55.2]
+            'feature1': [1.2, 2.3, 3.4, 4.5, 5.6, 6.7, 7.8, 8.9, 9.0, 10.1, 11.2, 12.3, 13.4, 14.5, 15.6],
+            'feature2': [3.4, 4.5, 5.6, 6.7, 7.8, 8.9, 9.0, 10.1, 11.2, 12.3, 13.4, 14.5, 15.6, 16.7, 17.8],
+            'target': [10.5, 15.2, 20.1, 25.8, 30.5, 35.2, 40.1, 45.8, 50.5, 55.2, 60.1, 65.8, 70.5, 75.2, 80.1]
         })
         
         # Buat temporary directory
@@ -62,7 +62,7 @@ class TestDataLoader(unittest.TestCase):
         self.assertEqual(problem_type, 'regression')
         
         # Cek jumlah data
-        self.assertEqual(len(X_train) + len(X_test), 10)
+        self.assertEqual(len(X_train) + len(X_test), 15)
     
     def test_missing_value_raises_error(self):
         """Test bahwa missing value memicu error"""
@@ -72,16 +72,16 @@ class TestDataLoader(unittest.TestCase):
             'label': [0, 1, 0]
         })
         
-        na_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
-        data_with_na.to_csv(na_file.name, index=False)
-        na_file.close()
+        temp_dir = tempfile.TemporaryDirectory()
+        na_file_path = os.path.join(temp_dir.name, 'data_with_na.csv')
+        data_with_na.to_csv(na_file_path, index=False)
         
         with self.assertRaises(ValueError) as context:
-            DataLoader.load_and_split(na_file.name)
+            DataLoader.load_and_split(na_file_path)
         
         self.assertIn("missing value", str(context.exception).lower())
         
-        os.unlink(na_file.name)
+        temp_dir.cleanup()
     
     def test_target_column_not_found_raises_error(self):
         """Test bahwa target column yang tidak ditemukan memicu error"""
@@ -118,6 +118,42 @@ class TestDataLoader(unittest.TestCase):
             DataLoader.load_and_split("file_yang_tidak_ada.csv")
         
         self.assertIn("tidak ditemukan", str(context.exception))
+    
+    def test_problem_type_detection_classification_with_10_unique(self):
+        """Test bahwa data dengan 10 unique values terdeteksi sebagai classification"""
+        import tempfile
+        temp_dir = tempfile.TemporaryDirectory()
+        file_path = os.path.join(temp_dir.name, 'test_classification.csv')
+        
+        data = pd.DataFrame({
+            'feature1': list(range(50)),
+            'target': list(range(10)) * 5
+        })
+        data.to_csv(file_path, index=False)
+        
+        result = DataLoader.load_and_split(file_path)
+        X_train, X_test, y_train, y_test, problem_type = result
+        
+        self.assertEqual(problem_type, 'classification')
+        temp_dir.cleanup()
+    
+    def test_problem_type_detection_regression_with_few_unique(self):
+        """Test bahwa data regression dengan > 10 unique values tetap regression"""
+        import tempfile
+        temp_dir = tempfile.TemporaryDirectory()
+        file_path = os.path.join(temp_dir.name, 'test_regression.csv')
+        
+        data = pd.DataFrame({
+            'feature1': [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+            'target': list(range(15)) + [15,16,17,18,19]
+        })
+        data.to_csv(file_path, index=False)
+        
+        result = DataLoader.load_and_split(file_path)
+        X_train, X_test, y_train, y_test, problem_type = result
+        
+        self.assertEqual(problem_type, 'regression')
+        temp_dir.cleanup()
 
 if __name__ == '__main__':
     unittest.main()
